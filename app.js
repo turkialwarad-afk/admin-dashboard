@@ -1,5 +1,5 @@
 // ✅ ضع رابط Apps Script Web App هنا فقط (بدون parameters)
-const API_URL = "PUT_YOUR_APPS_SCRIPT_WEBAPP_URL_HERE";
+const API_URL = "https://script.google.com/macros/s/AKfycbwWWPhS53amwIR50R3jWu9oqrwHhOAA738Mo_Qk2aHmxJgEAJAzZB3E-Bg_e6IRKClbmg/exec";
 
 /*************** SESSION ***************/
 function setToken(token) { localStorage.setItem("token", token); }
