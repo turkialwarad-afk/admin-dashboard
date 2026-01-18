@@ -1,5 +1,5 @@
 // ضع رابط الـ Apps Script Web App هنا:
-const API_URL = "https://script.google.com/macros/s/AKfycby_e-8q0dy9TLC2pLcy0otMXXgsMp5Lwcu2yVMM3T3IRtxQPp4YPc3mBmE4KjXIE9v1AA/exec";
+const API_URL = "https://script.google.com/macros/s/AKfycbzybIbnUEjGGogFfsvpblh31vbHvWZwVQJD54bfOcc1LvSHiRVg1iRKNsGbTlbSPx4EUg/exec";
 
 function saveSession(token) {
   localStorage.setItem("token", token);
