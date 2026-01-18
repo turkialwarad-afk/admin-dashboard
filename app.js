@@ -11,9 +11,24 @@ async function login() {
   const username = document.getElementById("username").value.trim();
   const password = document.getElementById("password").value.trim();
   const msg = document.getElementById("msg");
-
   msg.textContent = "جاري التحقق...";
 
+  const url = new URL(API_URL);
+  url.searchParams.set("action", "loginTest");
+  url.searchParams.set("username", username);
+  url.searchParams.set("password", password);
+
+  const res = await fetch(url.toString());
+  const data = await res.json();
+
+  if (!data.ok) {
+    msg.textContent = data.message || "خطأ في تسجيل الدخول";
+    return;
+  }
+
+  localStorage.setItem("token", data.token);
+  window.location.href = "./dashboard.html";
+}
   const res = await fetch(API_URL, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
