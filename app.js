@@ -1,16 +1,28 @@
-// ✅ ضع رابط Apps Script Web App هنا فقط (بدون parameters)
 const API_URL = "https://script.google.com/macros/s/AKfycbwWWPhS53amwIR50R3jWu9oqrwHhOAA738Mo_Qk2aHmxJgEAJAzZB3E-Bg_e6IRKClbmg/exec";
 
-/*************** SESSION ***************/
 function setToken(token) { localStorage.setItem("token", token); }
 function getToken() { return localStorage.getItem("token") || ""; }
 function logout() { localStorage.removeItem("token"); window.location.href = "./index.html"; }
+function protect() { if (!getToken()) window.location.href = "./index.html"; }
 
-function protect() {
-  if (!getToken()) window.location.href = "./index.html";
+// ===== JSONP Helper =====
+function jsonp(url) {
+  return new Promise((resolve, reject) => {
+    const cbName = "cb_" + Math.random().toString(36).slice(2);
+    window[cbName] = (data) => {
+      delete window[cbName];
+      script.remove();
+      resolve(data);
+    };
+
+    const script = document.createElement("script");
+    script.src = url + (url.includes("?") ? "&" : "?") + "callback=" + cbName;
+    script.onerror = () => reject(new Error("JSONP failed"));
+    document.body.appendChild(script);
+  });
 }
 
-/*************** LOGIN ***************/
+// ===== LOGIN =====
 async function login() {
   const username = document.getElementById("username").value.trim();
   const password = document.getElementById("password").value.trim();
@@ -18,13 +30,8 @@ async function login() {
   msg.textContent = "جاري التحقق...";
 
   try {
-    const res = await fetch(API_URL, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ action: "login", username, password })
-    });
-
-    const data = await res.json();
+    const url = `${API_URL}?action=login&username=${encodeURIComponent(username)}&password=${encodeURIComponent(password)}`;
+    const data = await jsonp(url);
 
     if (!data.ok) {
       msg.textContent = data.message || "فشل تسجيل الدخول";
@@ -33,26 +40,23 @@ async function login() {
 
     setToken(data.token);
     window.location.href = "./dashboard.html";
-  } catch (err) {
-    console.error(err);
-    msg.textContent = "خطأ اتصال (تحقق من API_URL أو النشر)";
+  } catch (e) {
+    console.error(e);
+    msg.textContent = "مشكلة اتصال";
   }
 }
 
-/*************** LOAD REQUESTS ***************/
+// ===== LOAD REQUESTS =====
 async function loadRequests() {
   const token = getToken();
   const q = document.getElementById("q").value.trim();
   const status = document.getElementById("status").value.trim();
 
-  const url = new URL(API_URL);
-  url.searchParams.set("action", "getRequests");
-  url.searchParams.set("token", token);
-  if (q) url.searchParams.set("q", q);
-  if (status) url.searchParams.set("status", status);
+  let url = `${API_URL}?action=getRequests&token=${encodeURIComponent(token)}`;
+  if (q) url += `&q=${encodeURIComponent(q)}`;
+  if (status) url += `&status=${encodeURIComponent(status)}`;
 
-  const res = await fetch(url.toString());
-  const data = await res.json();
+  const data = await jsonp(url);
 
   if (!data.ok) {
     alert("انتهت الجلسة أو غير مصرح");
@@ -89,19 +93,15 @@ async function loadRequests() {
   document.getElementById("count").textContent = `عدد الطلبات: ${data.data.length}`;
 }
 
-/*************** UPDATE STATUS ***************/
+// ===== UPDATE STATUS =====
 async function saveStatus(rowNumber) {
   const token = getToken();
   const select = document.querySelector(`select[data-row="${rowNumber}"]`);
   const newStatus = select.value;
 
-  const res = await fetch(API_URL, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ action: "updateStatus", token, rowNumber, newStatus })
-  });
+  const url = `${API_URL}?action=updateStatus&token=${encodeURIComponent(token)}&rowNumber=${rowNumber}&newStatus=${encodeURIComponent(newStatus)}`;
+  const data = await jsonp(url);
 
-  const data = await res.json();
   if (!data.ok) {
     alert(data.message || "فشل التحديث");
     return;
