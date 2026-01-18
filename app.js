@@ -1,4 +1,4 @@
-const API_URL = "https://script.google.com/macros/s/AKfycbwWWPhS53amwIR50R3jWu9oqrwHhOAA738Mo_Qk2aHmxJgEAJAzZB3E-Bg_e6IRKClbmg/exec";
+const API_URL = "https://script.google.com/macros/s/AKfycbyQsum5HIN7b3-U-bBAlkBjwi-0VgO7Mz6Bp4xfAFaU5Rc2p9dbbjeazh5XMcJ8695h-w/exec";
 
 function setToken(token) { localStorage.setItem("token", token); }
 function getToken() { return localStorage.getItem("token") || ""; }
