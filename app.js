@@ -1,94 +1,77 @@
-// ضع رابط الـ Apps Script Web App هنا:
-const API_URL = "const API_URL = "https://script.google.com/macros/s/AKfycbzybIbnUEjGGogFfsvpblh31vbHvWZwVQJD54bfOcc1LvSHiRVg1iRKNsGbTlbSPx4EUg/exec";";
-function saveSession(token) {
-  localStorage.setItem("token", token);
-}
-function getToken() {
-  return localStorage.getItem("token") || "";
+// ✅ ضع رابط Apps Script Web App هنا فقط (بدون parameters)
+const API_URL = "PUT_YOUR_APPS_SCRIPT_WEBAPP_URL_HERE";
+
+/*************** SESSION ***************/
+function setToken(token) { localStorage.setItem("token", token); }
+function getToken() { return localStorage.getItem("token") || ""; }
+function logout() { localStorage.removeItem("token"); window.location.href = "./index.html"; }
+
+function protect() {
+  if (!getToken()) window.location.href = "./index.html";
 }
 
+/*************** LOGIN ***************/
 async function login() {
   const username = document.getElementById("username").value.trim();
   const password = document.getElementById("password").value.trim();
   const msg = document.getElementById("msg");
   msg.textContent = "جاري التحقق...";
 
-  const url = new URL(API_URL);
-  url.searchParams.set("action", "loginTest");
-  url.searchParams.set("username", username);
-  url.searchParams.set("password", password);
+  try {
+    const res = await fetch(API_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ action: "login", username, password })
+    });
 
-  const res = await fetch(url.toString());
-  const data = await res.json();
+    const data = await res.json();
 
-  if (!data.ok) {
-    msg.textContent = data.message || "خطأ في تسجيل الدخول";
-    return;
+    if (!data.ok) {
+      msg.textContent = data.message || "فشل تسجيل الدخول";
+      return;
+    }
+
+    setToken(data.token);
+    window.location.href = "./dashboard.html";
+  } catch (err) {
+    console.error(err);
+    msg.textContent = "خطأ اتصال (تحقق من API_URL أو النشر)";
   }
-
-  localStorage.setItem("token", data.token);
-  window.location.href = "./dashboard.html";
-}
-  const res = await fetch(API_URL, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ action: "login", username, password })
-  });
-
-  const data = await res.json();
-  if (!data.ok) {
-    msg.textContent = data.message || "خطأ في تسجيل الدخول";
-    return;
-  }
-
-  saveSession(data.token);
-  window.location.href = "./dashboard.html";
 }
 
-function protect() {
-  if (!getToken()) window.location.href = "./index.html";
-}
-
-function logout() {
-  localStorage.removeItem("token");
-  window.location.href = "./index.html";
-}
-
+/*************** LOAD REQUESTS ***************/
 async function loadRequests() {
   const token = getToken();
-  const q = document.getElementById("q")?.value.trim() || "";
-  const status = document.getElementById("status")?.value.trim() || "";
-  const source = document.getElementById("source")?.value.trim() || "";
+  const q = document.getElementById("q").value.trim();
+  const status = document.getElementById("status").value.trim();
 
   const url = new URL(API_URL);
   url.searchParams.set("action", "getRequests");
   url.searchParams.set("token", token);
   if (q) url.searchParams.set("q", q);
   if (status) url.searchParams.set("status", status);
-  if (source) url.searchParams.set("source", source);
 
   const res = await fetch(url.toString());
   const data = await res.json();
 
   if (!data.ok) {
-    alert("غير مصرح. سجل دخول مرة ثانية.");
+    alert("انتهت الجلسة أو غير مصرح");
     logout();
     return;
   }
 
   const tbody = document.getElementById("tbody");
-  const count = document.getElementById("count");
   tbody.innerHTML = "";
 
   data.data.forEach(item => {
     const tr = document.createElement("tr");
     tr.innerHTML = `
-      <td>${item.name ?? ""}</td>
-      <td>${item.nationalId ?? ""}</td>
-      <td>${item.duration ?? ""}</td>
-      <td>${item.expiry ?? ""}</td>
-      <td><span class="badge bg-info text-dark">${item.status ?? ""}</span></td>
-      <td>
+      <td>${item.name}</td>
+      <td>${item.nationalId}</td>
+      <td>${item.duration}</td>
+      <td>${item.expiry}</td>
+      <td><span class="badge bg-info text-dark">${item.status}</span></td>
+      <td style="width:240px;">
         <div class="d-flex gap-2">
           <select class="form-select form-select-sm" data-row="${item.rowNumber}">
             <option ${item.status==="جديد"?"selected":""}>جديد</option>
@@ -96,23 +79,21 @@ async function loadRequests() {
             <option ${item.status==="مكتمل"?"selected":""}>مكتمل</option>
             <option ${item.status==="مرفوض"?"selected":""}>مرفوض</option>
           </select>
-          <button class="btn btn-sm btn-success" onclick="saveStatus(${item.rowNumber}, this)">حفظ</button>
+          <button class="btn btn-sm btn-success" onclick="saveStatus(${item.rowNumber})">حفظ</button>
         </div>
       </td>
     `;
     tbody.appendChild(tr);
   });
 
-  count.textContent = `عدد الطلبات: ${data.data.length}`;
+  document.getElementById("count").textContent = `عدد الطلبات: ${data.data.length}`;
 }
 
-async function saveStatus(rowNumber, btn) {
+/*************** UPDATE STATUS ***************/
+async function saveStatus(rowNumber) {
   const token = getToken();
   const select = document.querySelector(`select[data-row="${rowNumber}"]`);
   const newStatus = select.value;
-
-  btn.disabled = true;
-  btn.textContent = "جاري...";
 
   const res = await fetch(API_URL, {
     method: "POST",
@@ -121,12 +102,8 @@ async function saveStatus(rowNumber, btn) {
   });
 
   const data = await res.json();
-
-  btn.disabled = false;
-  btn.textContent = "حفظ";
-
   if (!data.ok) {
-    alert(data.message || "فشل الحفظ");
+    alert(data.message || "فشل التحديث");
     return;
   }
 
