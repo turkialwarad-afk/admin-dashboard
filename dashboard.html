@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>لوحة الأدمن</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+</head>
+<body class="bg-light">
+
+<div class="d-flex">
+  <!-- Sidebar -->
+  <aside class="bg-white border-start p-3" style="width: 260px; min-height: 100vh;">
+    <h5 class="mb-4">بوابة الأدمن</h5>
+    <div class="mb-2 text-secondary small">القائمة</div>
+    <div class="list-group">
+      <a class="list-group-item list-group-item-action active" href="#">متابعة الطلبات</a>
+    </div>
+    <button class="btn btn-outline-danger w-100 mt-4" onclick="logout()">تسجيل خروج</button>
+  </aside>
+
+  <!-- Main -->
+  <main class="flex-grow-1 p-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+      <h4 class="m-0">متابعة الطلبات</h4>
+      <button class="btn btn-secondary" onclick="loadRequests()">تحديث</button>
+    </div>
+
+    <!-- Filters -->
+    <div class="card shadow-sm mb-3">
+      <div class="card-body">
+        <div class="row g-2">
+          <div class="col-md-4">
+            <input id="q" class="form-control" placeholder="بحث (اسم / هوية / جوال)">
+          </div>
+          <div class="col-md-3">
+            <select id="status" class="form-select">
+              <option value="">كل الحالات</option>
+              <option>جديد</option>
+              <option>تحت الإجراء</option>
+              <option>مكتمل</option>
+              <option>مرفوض</option>
+            </select>
+          </div>
+          <div class="col-md-3">
+            <input id="source" class="form-control" placeholder="اسم مصدر التصريح">
+          </div>
+          <div class="col-md-2 d-grid">
+            <button class="btn btn-primary" onclick="loadRequests()">بحث</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Table -->
+    <div class="card shadow-sm">
+      <div class="card-body">
+        <div class="table-responsive">
+          <table class="table table-bordered align-middle">
+            <thead>
+              <tr>
+                <th>الاسم</th>
+                <th>رقم الهوية</th>
+                <th>مدة التصريح</th>
+                <th>تاريخ الانتهاء</th>
+                <th>الحالة</th>
+                <th style="width:220px;">إجراء</th>
+              </tr>
+            </thead>
+            <tbody id="tbody"></tbody>
+          </table>
+        </div>
+        <div id="count" class="small text-secondary"></div>
+      </div>
+    </div>
+  </main>
+</div>
+
+<script src="./app.js"></script>
+<script>
+  protect();
+  loadRequests();
+</script>
+</body>
+</html>
